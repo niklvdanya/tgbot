@@ -1,12 +1,35 @@
-#include <tgbot/tgbot.h>
 #include <iostream>
-
-class MyBot {
+#include <tgbot/tgbot.h>
+#include <vector>
+#include <string>
+#include <curl/curl.h>
+#include "json.hpp"
+static size_t Writer(char* buffer, size_t size, size_t nmemb, std::string* html) {
+        int result = 0;
+        if (buffer) {
+            html->append(buffer, size*nmemb);
+            result = size*nmemb;
+        }
+        return result;
+    }
+std::string get_request(const std::string& link) {
+        CURL *curl;
+        std::string data;
+        curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Writer);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+        return data;
+    }
+class Bot {
 public:
-    MyBot(const std::string& token) : bot(token) {}
+    Bot(const std::string& token) : bot(token) {
+        setupHandlers();
+    }
 
     void run() {
-        setupHandlers();
         try {
             std::cout << "Bot username: " << bot.getApi().getMe()->username << std::endl;
             TgBot::TgLongPoll longPoll(bot);
@@ -20,6 +43,24 @@ public:
     }
 
 private:
+    TgBot::Bot bot;
+    std::vector<std::string> bot_commands = {"start", "schedule"};
+
+    std::string get_schedule() {
+        auto js_obj = nlohmann::json::parse(get_request("https://timetable.spbu.ru/api/v1/groups/366764/events"));
+        std::string schedule_info = "";
+        for (int i = 0; i < js_obj["Days"].size(); i++){
+            schedule_info += "**" + js_obj["Days"][i]["DayString"].get<std::string>() + "**\n";
+            for (int j = 0; j < js_obj["Days"][i]["DayStudyEvents"].size(); j++){
+                schedule_info += js_obj["Days"][i]["DayStudyEvents"][j]["Subject"].get<std::string>() + "\n";
+                schedule_info += js_obj["Days"][i]["DayStudyEvents"][j]["TimeIntervalString"].get<std::string>() + "\n";
+                schedule_info += js_obj["Days"][i]["DayStudyEvents"][j]["EducatorsDisplayText"].get<std::string>() + "\n\n";
+            }
+            schedule_info += "------------------------------------------\n";
+        }
+        return schedule_info;
+    }
+
     void setupHandlers() {
         bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
             onStartCommand(message);
@@ -28,47 +69,58 @@ private:
         bot.getEvents().onCallbackQuery([this](TgBot::CallbackQuery::Ptr query) {
             onCallbackQuery(query);
         });
+
+        bot.getEvents().onAnyMessage([this](TgBot::Message::Ptr message) {
+            onAnyMessage(message);
+        });
     }
 
     void onStartCommand(TgBot::Message::Ptr message) {
-        std::string welcomeMessage = "Welcome, " + message->from->firstName + "!\n";
-        welcomeMessage += "Follow the instructions to configure\n";
-        welcomeMessage += "-----------------------------------------\n";
-        bot.getApi().sendMessage(message->chat->id, welcomeMessage);
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+    TgBot::InlineKeyboardButton::Ptr groupBtn(new TgBot::InlineKeyboardButton);
+    TgBot::InlineKeyboardButton::Ptr teacherBtn(new TgBot::InlineKeyboardButton);
+    groupBtn->text = "Названию группы";
+    groupBtn->callbackData = "group_btn";
+    teacherBtn->text = "ФИО преподавателя";
+    teacherBtn->callbackData = "teacher_btn";
+    keyboard->inlineKeyboard.push_back({groupBtn});
+    keyboard->inlineKeyboard.push_back({teacherBtn});
+    std::string greeting = "Добро пожаловать, " + message->chat->firstName + "\n";
+    greeting += "Cледуйте указаниям для настройки\n";
+    greeting += "--------------------\n";
+    greeting += "Получить расписание по: \n";
+    bot.getApi().sendMessage(message->chat->id, greeting, false, 0, keyboard);
+}
 
-        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-        addKeyboardButton(keyboard, "The name of the group", "group_name");
-        addKeyboardButton(keyboard, "Program navigation", "program_navigation");
-        addKeyboardButton(keyboard, "Full name of the teacher", "teacher_name");
-
-        bot.getApi().sendMessage(message->chat->id, "Choose a direction, get a shedule by: ", false, 0, keyboard);
-    }
-
-    void addKeyboardButton(TgBot::InlineKeyboardMarkup::Ptr keyboard, const std::string& text, const std::string& callbackData) {
-        std::vector<TgBot::InlineKeyboardButton::Ptr> row;
-        TgBot::InlineKeyboardButton::Ptr button(new TgBot::InlineKeyboardButton);
-        button->text = text;
-        button->callbackData = callbackData;
-        row.push_back(button);
-        keyboard->inlineKeyboard.push_back(row);
-    }
 
     void onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
-        if (query->data == "group_name") {
-            bot.getApi().sendMessage(query->message->chat->id, "You chose: Group name");
-        } else if (query->data == "program_navigation") {
-            bot.getApi().sendMessage(query->message->chat->id, "You chose: Program navigation");
-        } else if (query->data == "teacher_name") {
-            bot.getApi().sendMessage(query->message->chat->id, "You chose: Teacher name");
-        }
+    if (query->data == "group_btn") {
+        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+        TgBot::InlineKeyboardButton::Ptr groupScheduleBtn(new TgBot::InlineKeyboardButton);
+        groupScheduleBtn->text = "22-Б09";
+        groupScheduleBtn->callbackData = "group_22B09_schedule";
+        keyboard->inlineKeyboard.push_back({groupScheduleBtn});
+        bot.getApi().sendMessage(query->message->chat->id, "Выберете группу:", false, 0, keyboard);
+    } else if (query->data == "group_22B09_schedule") {
+        std::string schedule = get_schedule();
+        bot.getApi().sendMessage(query->message->chat->id, schedule);
+    } else if (query->data == "teacher_btn") {
+        bot.getApi().sendMessage(query->message->chat->id, "under development");
     }
+}
 
-    TgBot::Bot bot;
+    void onAnyMessage(TgBot::Message::Ptr message) {
+        for (const auto& command: bot_commands) {
+            if ("/" + command == message->text) {
+                return;
+            }
+        }
+        bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
+    }
 };
 
 int main() {
-    const std::string token = "PLACE YOUR TOKEN";
-    MyBot bot(token);
-    bot.run();
+    Bot MyBot("PLACE YOUR TOKEN");
+    MyBot.run();
     return 0;
 }
