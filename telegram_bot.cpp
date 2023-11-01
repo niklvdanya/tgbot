@@ -1,6 +1,7 @@
-#include "MyBot.h"
+#include "Bot.h"
 
-int main() {
+int main() 
+{
     Bot MyBot("6672331153:AAGMc1Y97gdmZlroOYONmWA8Nlz-HMq3vJE");
     MyBot.run();
     return 0;
