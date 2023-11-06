@@ -1,7 +1,7 @@
 #include "Bot.h"
 
-int main() 
-{
+int main() {
+
     Bot MyBot("PLACE YOUR TOKEN");
     MyBot.run();
     return 0;
