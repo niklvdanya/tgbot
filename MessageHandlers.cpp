@@ -27,7 +27,7 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query)
         groupScheduleBtn->text = "22-Б09";
         groupScheduleBtn->callbackData = "group_22B09_schedule";
         keyboard->inlineKeyboard.push_back({groupScheduleBtn});
-        bot.getApi().sendMessage(query->message->chat->id, "Выберете группу:", false, 0, keyboard);
+        bot.getApi().sendMessage(query->message->chat->id, "Выберите группу:", false, 0, keyboard);
     } 
     else if (query->data == "group_22B09_schedule") 
     {
