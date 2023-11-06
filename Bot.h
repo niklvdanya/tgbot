@@ -1,18 +1,34 @@
 #pragma once
-
 #include <tgbot/tgbot.h>
-#include <string>
-#include "BotCommandHandlers.h"
+#include "MessageHandlers.h"
 
-class Bot {
+/**
+ * @brief Класс для создания и запуска бота.
+ */
+class Bot 
+{
+    TgBot::Bot bot;
+    MessageHandlers messageHandlers_;
+
 public:
-    explicit Bot(const std::string& token);
+    /**
+     * Конструктор класса Bot.
+     * @param token Токен бота для авторизации.
+     */
+    explicit Bot(const std::string& token)
+        : bot(token), messageHandlers_(bot) 
+        {
+        setupHandlers();
+    }
 
+    /**
+     * Запускает работу бота.
+     * Слушает сообщения и события в течение всего времени выполнения.
+     */
     void run();
 
-private:
-    TgBot::Bot bot;
-    BotCommandHandlers commandHandlers;
-
+    /**
+     * Настраивает обработчики событий для бота.
+     */
     void setupHandlers();
 };

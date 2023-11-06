@@ -1,30 +1,20 @@
 #include "Bot.h"
-
-Bot::Bot(const std::string& token) : bot(token) {
-    setupHandlers();
-}
-
-void Bot::setupHandlers() {
-    bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
-        commandHandlers.handleStartCommand(message);
-    });
-
-    bot.getEvents().onCallbackQuery([this](TgBot::CallbackQuery::Ptr query) {
-        commandHandlers.handleCallbackQuery(query);
-    });
-
-    bot.getEvents().onAnyMessage([this](TgBot::Message::Ptr message) {
-        commandHandlers.handleAnyMessage(message);
-    });
-}
+#include <iostream>
 
 void Bot::run() {
     try {
+        std::cout << "Bot username: " << bot.getApi().getMe()->username << std::endl;
         TgBot::TgLongPoll longPoll(bot);
         while (true) {
+            std::cout << "Long poll started" << std::endl;
             longPoll.start();
         }
     } catch (TgBot::TgException& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cout << "error: " << e.what() << std::endl;
     }
+}
+
+
+void Bot::setupHandlers() {
+    messageHandlers_.setupHandlers();
 }

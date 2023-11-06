@@ -1,0 +1,3 @@
+/home/danya/TelegramBot/build/CMakeFiles/telegram_bot.dir
+/home/danya/TelegramBot/build/CMakeFiles/edit_cache.dir
+/home/danya/TelegramBot/build/CMakeFiles/rebuild_cache.dir
