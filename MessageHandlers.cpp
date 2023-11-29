@@ -1,9 +1,14 @@
 #include "MessageHandlers.h"
+#include "GroupMap.h"
+GroupMap groupMap;
+
+// Добавим мапу для отслеживания состояний пользователей
+std::unordered_map<int, std::string> userStates;
 
 void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) 
 {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    TgBot::InlineKeyboardButton::Ptr groupBtn(new TgBot::InlineKeyboardButton);
+    auto groupBtn = std::make_shared<TgBot::InlineKeyboardButton>();
     TgBot::InlineKeyboardButton::Ptr teacherBtn(new TgBot::InlineKeyboardButton);
     groupBtn->text = "Названию группы";
     groupBtn->callbackData = "group_btn";
@@ -22,20 +27,14 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query)
 {
     if (query->data == "group_btn") 
     {
-        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-        TgBot::InlineKeyboardButton::Ptr groupScheduleBtn(new TgBot::InlineKeyboardButton);
-        groupScheduleBtn->text = "22-Б09";
-        groupScheduleBtn->callbackData = "group_22B09_schedule";
-        keyboard->inlineKeyboard.push_back({groupScheduleBtn});
-        bot.getApi().sendMessage(query->message->chat->id, "Выберите группу:", false, 0, keyboard);
+        // Устанавливаем состояние пользователя в "waiting_for_group"
+        userStates[query->message->chat->id] = "waiting_for_group";
+
+        // Отправляем сообщение, просим пользователя ввести название группы
+        bot.getApi().sendMessage(query->message->chat->id, "Введите название группы, например, 22.Б09-мм.");
     } 
-    else if (query->data == "group_22B09_schedule") 
-    {
-        HTTPClient httpClient;
-        ServiceSchedule serviceSchedule(httpClient);
-        std::string schedule = serviceSchedule.get_schedule();
-        bot.getApi().sendMessage(query->message->chat->id, schedule);
-    } 
+    // 
+
     else if (query->data == "teacher_btn") 
     {
         bot.getApi().sendMessage(query->message->chat->id, "under development");
@@ -54,7 +53,35 @@ void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message)
     {
         return;
     }
-    bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
+    auto it = userStates.find(message->chat->id);
+    if (it != userStates.end() && it->second == "waiting_for_group") 
+    {
+        // Получаем введенное пользователем название группы
+        std::string groupName = message->text;
+
+        // Получаем StudentGroupId по StudentGroupName
+        std::string groupId = groupMap.getGroupId(groupName);
+
+        if (!groupId.empty()) 
+        {
+            // Теперь у вас есть StudentGroupId, используйте его для вызова get_schedule
+            HTTPClient httpClient;
+            ServiceSchedule serviceSchedule(httpClient);
+            std::string schedule = serviceSchedule.get_schedule(groupId);
+
+            // Отправляем пользователю расписание
+            bot.getApi().sendMessage(message->chat->id, schedule);
+        } 
+        else 
+        {
+            // Обработка сценария, когда groupId не найден
+            bot.getApi().sendMessage(message->chat->id, "Группа не найдена. Пожалуйста, убедитесь в правильности введенного названия группы.");
+        }
+
+        // Удаляем состояние "waiting_for_group" после обработки
+        userStates.erase(it);
+    } 
+    
 }
 
 /**

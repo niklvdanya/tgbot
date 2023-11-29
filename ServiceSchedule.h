@@ -25,5 +25,5 @@ public:
      * Получает расписание с сервера и возвращает его в виде строки.
      * @return Строка с расписанием.
      */
-    std::string get_schedule();
+    std::string get_schedule(std::string groupId);
 };
