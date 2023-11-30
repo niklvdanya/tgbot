@@ -2,7 +2,6 @@
 #include "GroupMap.h"
 GroupMap groupMap;
 
-// Добавим мапу для отслеживания состояний пользователей
 std::unordered_map<int, std::string> userStates;
 
 void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) 
@@ -56,29 +55,22 @@ void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message)
     auto it = userStates.find(message->chat->id);
     if (it != userStates.end() && it->second == "waiting_for_group") 
     {
-        // Получаем введенное пользователем название группы
         std::string groupName = message->text;
-
-        // Получаем StudentGroupId по StudentGroupName
         std::string groupId = groupMap.getGroupId(groupName);
 
         if (!groupId.empty()) 
         {
-            // Теперь у вас есть StudentGroupId, используйте его для вызова get_schedule
             HTTPClient httpClient;
             ServiceSchedule serviceSchedule(httpClient);
             std::string schedule = serviceSchedule.get_schedule(groupId);
 
-            // Отправляем пользователю расписание
             bot.getApi().sendMessage(message->chat->id, schedule);
         } 
         else 
         {
-            // Обработка сценария, когда groupId не найден
             bot.getApi().sendMessage(message->chat->id, "Группа не найдена. Пожалуйста, убедитесь в правильности введенного названия группы.");
         }
 
-        // Удаляем состояние "waiting_for_group" после обработки
         userStates.erase(it);
     } 
     
