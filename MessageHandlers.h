@@ -7,7 +7,7 @@
 #pragma once
 #include <tgbot/tgbot.h>
 #include "ServiceSchedule.h"
-
+#include <vector>
 /**
  * @class MessageHandlers
  * @brief Класс для обработки входящих сообщений и команд от пользователя в Telegram боте.

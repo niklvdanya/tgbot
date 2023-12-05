@@ -16,7 +16,6 @@ add_executable(telegram_bot
     HTTPClient.cpp
     MessageHandlers.cpp
     ServiceSchedule.cpp
-    GroupMap.cpp
 )
 
 target_link_libraries(telegram_bot

@@ -1,13 +1,9 @@
 #include "MessageHandlers.h"
-#include "GroupMap.h"
-GroupMap groupMap;
-
-std::unordered_map<int, std::string> userStates;
-
+#include <iostream>
 void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) 
 {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    auto groupBtn = std::make_shared<TgBot::InlineKeyboardButton>();
+    TgBot::InlineKeyboardButton::Ptr groupBtn(new TgBot::InlineKeyboardButton);
     TgBot::InlineKeyboardButton::Ptr teacherBtn(new TgBot::InlineKeyboardButton);
     groupBtn->text = "Названию группы";
     groupBtn->callbackData = "group_btn";
@@ -24,17 +20,61 @@ void MessageHandlers::onStartCommand(TgBot::Message::Ptr message)
 
 void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) 
 {
+    HTTPClient  httpClient;
+    ServiceSchedule serviceSchedule(httpClient);
     if (query->data == "group_btn") 
     {
-        // Устанавливаем состояние пользователя в "waiting_for_group"
-        userStates[query->message->chat->id] = "waiting_for_group";
+        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+        auto facultiesArray = serviceSchedule.getFaculties();
+        for (const auto& faculty : facultiesArray)
+        {
+        
+            TgBot::InlineKeyboardButton::Ptr facultyBtn(new TgBot::InlineKeyboardButton);
+            facultyBtn->text = faculty.getName();
+            facultyBtn->callbackData = "faculty_" + faculty.getAlias();
+            keyboard->inlineKeyboard.push_back({ facultyBtn });
+        }
 
-        // Отправляем сообщение, просим пользователя ввести название группы
-        bot.getApi().sendMessage(query->message->chat->id, "Введите название группы, например, 22.Б09-мм.");
+        bot.getApi().sendMessage(query->message->chat->id, "Выберите факультет:", false, 0, keyboard);
+
+
     } 
-    // 
+    else if (query->data.find("faculty_") == 0)
+    {
+        std::string facultyAlias = query->data.substr(8); 
+        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+        // Получение списка уровней образования для выбранного факультета
+        auto levelsArray = serviceSchedule.getLevelsForFaculty(facultyAlias);
 
-    else if (query->data == "teacher_btn") 
+        for (const auto& level : levelsArray)
+        {
+            TgBot::InlineKeyboardButton::Ptr levelBtn(new TgBot::InlineKeyboardButton);
+            levelBtn->text = level.getStudyLevelName();
+            levelBtn->callbackData = "level_" + std::to_string(level.getId()) + facultyAlias;
+            keyboard->inlineKeyboard.push_back({ levelBtn });
+        }
+
+        bot.getApi().sendMessage(query->message->chat->id, "Выберите уровень образования:", false, 0, keyboard);
+    }
+else if (query->data.find("level_") == 0)
+{
+    std::string alias = query->data.substr(7);
+    int levelId = std::stoi(std::string(1, query->data[6]));
+    auto programs = serviceSchedule.getPrograms(alias, levelId);
+
+    // Создание клавиатуры с кнопками программ
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+
+    for (const auto& program : programs)
+    {
+        TgBot::InlineKeyboardButton::Ptr programBtn(new TgBot::InlineKeyboardButton);
+        programBtn->text = program.getProgramName();
+        programBtn->callbackData = "program_" + std::to_string(program.getId()); 
+        keyboard->inlineKeyboard.push_back({ programBtn });
+    }
+
+    bot.getApi().sendMessage(query->message->chat->id, "Выберите программу обучения:", false, 0, keyboard);
+} else if (query->data == "teacher_btn") 
     {
         bot.getApi().sendMessage(query->message->chat->id, "under development");
     }
@@ -52,28 +92,7 @@ void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message)
     {
         return;
     }
-    auto it = userStates.find(message->chat->id);
-    if (it != userStates.end() && it->second == "waiting_for_group") 
-    {
-        std::string groupName = message->text;
-        std::string groupId = groupMap.getGroupId(groupName);
-
-        if (!groupId.empty()) 
-        {
-            HTTPClient httpClient;
-            ServiceSchedule serviceSchedule(httpClient);
-            std::string schedule = serviceSchedule.get_schedule(groupId);
-
-            bot.getApi().sendMessage(message->chat->id, schedule);
-        } 
-        else 
-        {
-            bot.getApi().sendMessage(message->chat->id, "Группа не найдена. Пожалуйста, убедитесь в правильности введенного названия группы.");
-        }
-
-        userStates.erase(it);
-    } 
-    
+    bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
 }
 
 /**
