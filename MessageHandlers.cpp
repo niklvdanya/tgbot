@@ -1,5 +1,6 @@
 #include "MessageHandlers.h"
 #include <iostream>
+#include <cctype>
 void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) 
 {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
@@ -62,29 +63,75 @@ else if (query->data.find("level_") == 0)
     int levelId = std::stoi(std::string(1, query->data[6]));
     auto programs = serviceSchedule.getPrograms(alias, levelId);
 
-    // Создание клавиатуры с кнопками программ
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
 
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
     for (const auto& program : programs)
     {
+        std::string id = std::to_string(program.getId());
         TgBot::InlineKeyboardButton::Ptr programBtn(new TgBot::InlineKeyboardButton);
         programBtn->text = program.getProgramName();
-        programBtn->callbackData = "program_" + std::to_string(program.getId()); 
+        programBtn->callbackData = "program_"  + std::to_string(levelId) + id + alias;
         keyboard->inlineKeyboard.push_back({ programBtn });
     }
 
     bot.getApi().sendMessage(query->message->chat->id, "Выберите программу обучения:", false, 0, keyboard);
-} else if (query->data == "teacher_btn") 
+} else if (query->data.find("program_") == 0) {
+    int levelId = std::stoi(std::string(1, query->data[8]));
+    std::string alias;
+    int programId;
+
+    if(isdigit(query->data[10])) {
+        alias = query->data.substr(11); 
+        std::string numberStr = query->data.substr(9, 2);
+        programId = std::stoi(numberStr); 
+    } else {
+        alias = query->data.substr(10); 
+        std::string numberStr = query->data.substr(9, 1);
+        programId = std::stoi(numberStr); 
+    }
+
+    auto programsWithYears = serviceSchedule.getProgramYears(alias, levelId, programId);
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+
+    for (const auto& program : programsWithYears) {
+        TgBot::InlineKeyboardButton::Ptr yearBtn(new TgBot::InlineKeyboardButton);
+        yearBtn->text = program.getYear();
+        yearBtn->callbackData = "programYear_" + std::to_string(program.getStudyProgramId());
+        keyboard->inlineKeyboard.push_back({ yearBtn });
+    }
+
+    bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
+}
+else if (query->data.find("programYear_") == 0) 
+{
+    std::string studyProgramId = query->data.substr(12);
+
+    auto groups = serviceSchedule.getGroups(studyProgramId);
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+
+    for (const auto& group : groups) {
+        TgBot::InlineKeyboardButton::Ptr yearBtn(new TgBot::InlineKeyboardButton);
+        yearBtn->text = group.getGroupName();
+        yearBtn->callbackData = "group_" + std::to_string(group.getGroupId());
+        keyboard->inlineKeyboard.push_back({ yearBtn });
+    }
+
+    bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
+
+}
+else if (query->data.find("group_") == 0) 
+{
+    std::string groupId = query->data.substr(6);
+    std::string schedule = serviceSchedule.getSchedule(groupId);
+    bot.getApi().sendMessage(query->message->chat->id, schedule);
+
+}
+else if (query->data == "teacher_btn") 
     {
         bot.getApi().sendMessage(query->message->chat->id, "under development");
     }
 }
 
-/**
- * Обработчик любых текстовых сообщений, не являющихся командами.
- * Отвечает на текст сообщения.
- * @param message Указатель на объект сообщения.
- */
 
 void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message) 
 {
@@ -95,9 +142,7 @@ void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message)
     bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
 }
 
-/**
- * Настраивает обработчики событий для бота.
- */
+
 
 void MessageHandlers::setupHandlers() 
 {

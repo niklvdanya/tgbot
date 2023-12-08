@@ -44,11 +44,30 @@ private:
     std::string studyLevelName;
 };
 
+class Group {
+public:
+    Group(unsigned int id, std::string name): groupId(id), groupName(name) {}
+    unsigned int getGroupId() const {
+        return groupId;
+    }
+
+    std::string getGroupName() const {
+        return groupName;
+    }
+
+
+private:
+    unsigned int groupId;
+    std::string groupName;
+};
+
 
 class Program
 {
 public:
     Program(unsigned int id, std::string name): id(id), programName(name) {}
+    Program(std::string year, int id): year(year), studyProgramId(id) {}
+    
     unsigned int getId() const {
         return id;
     }
@@ -56,11 +75,19 @@ public:
     std::string getProgramName() const {
         return programName;
     }
+    int getStudyProgramId() const {
+        return studyProgramId;
+    }
+    std::string getYear() const {
+        return year;
+    }
 
 
 private:
     unsigned int id;
     std::string programName;
+    std::string year;
+    int studyProgramId;
 };
 
 
@@ -75,8 +102,10 @@ public:
      * @return Строка с расписанием.
      */
     
-    std::string get_schedule();
+    std::string getSchedule(std::string groupId);
     std::vector<Faculty> getFaculties();
     std::vector<Level> getLevelsForFaculty(const std::string& facultyAlias);
     std::vector<Program> getPrograms(const std::string& facultyAlias, int levelId);
+    std::vector<Program> getProgramYears(const std::string& facultyAlias, int levelId, int programId);
+    std::vector<Group> getGroups(std::string programId);
 };
