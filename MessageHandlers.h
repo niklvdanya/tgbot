@@ -15,9 +15,54 @@
  * Этот класс содержит методы для обработки различных типов сообщений и запросов,
  * таких как команды, текстовые сообщения и callback-запросы.
  */
+
+
 class MessageHandlers 
 {
+public:
+    /**
+     * Конструктор класса MessageHandlers.
+     * @param bot Ссылка на объект бота, с которым будет работать обработчик.
+     */
+    explicit MessageHandlers(TgBot::Bot& bot)
+    : bot(bot), serviceSchedule(httpClient) {}
+
+    /**
+     * Настраивает обработчики событий для бота.
+     */
+    void setupHandlers();
+    /**
+     * Обрабатывает выбор пользователем кнопки "По названию группы"
+    */
+    void handleGroupButton(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем факультета
+    */
+    void handleFacultySelection(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем уровня образования
+    */
+    void handleLevelSelection(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем программы обучения
+    */
+    void handleProgramSelection(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем года поступления
+    */
+    void handleYearSelection(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем группы
+    */
+    void handleGroupSelection(const TgBot::CallbackQuery::Ptr& query);
+    /**
+     * Обрабатывает выбор пользователем кнопки "По ФИО преподавателя"
+    */
+    void handleTeacherButton(const TgBot::CallbackQuery::Ptr& query);
+private:
     TgBot::Bot& bot;
+    HTTPClient  httpClient;
+    ServiceSchedule serviceSchedule;
 
     /**
      * Обработчик команды /start.
@@ -38,16 +83,6 @@ class MessageHandlers
      * @param message Указатель на объект сообщения.
      */
     void onAnyMessage(TgBot::Message::Ptr message);
+    
 
-public:
-    /**
-     * Конструктор класса MessageHandlers.
-     * @param bot Ссылка на объект бота, с которым будет работать обработчик.
-     */
-    explicit MessageHandlers(TgBot::Bot& bot) : bot(bot) {}
-
-    /**
-     * Настраивает обработчики событий для бота.
-     */
-    void setupHandlers();
 };

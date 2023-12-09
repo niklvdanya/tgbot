@@ -7,10 +7,7 @@
  */
 class Bot 
 {
-    TgBot::Bot bot;
-    MessageHandlers messageHandlers_;
-
-public:
+    public:
     /**
      * Конструктор класса Bot.
      * @param token Токен бота для авторизации.
@@ -31,4 +28,7 @@ public:
      * Настраивает обработчики событий для бота.
      */
     void setupHandlers();
+private:
+    TgBot::Bot bot;
+    MessageHandlers messageHandlers_;
 };
