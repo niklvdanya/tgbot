@@ -1,21 +1,10 @@
-/**
- * @file ServiceSchedule.h
- * @brief Заголовочный файл, содержащий класс ServiceSchedule для работы с расписанием.
- */
-
 #pragma once
 #include "HTTPClient.h"
 #include <string>
 #include "json.hpp"
 
-/**
- * @class ServiceSchedule
- * @brief Класс для получения и обработки расписания.
- *
- * Этот класс использует HTTPClient для отправки запросов к API расписания и
- * обработки полученных данных.
- */
-class Faculty {
+class Faculty 
+{
 public:
     Faculty(const std::string& alias, const std::string& name)
         : alias(alias), name(name) {}
@@ -27,7 +16,8 @@ private:
     std::string name;
 };
 
-class Level {
+class Level 
+{
 public:
     Level(unsigned int id, std::string name): id(id), studyLevelName(name) {}
     unsigned int getId() const {
@@ -44,10 +34,12 @@ private:
     std::string studyLevelName;
 };
 
-class Group {
+class Group 
+{
 public:
     Group(unsigned int id, std::string name): groupId(id), groupName(name) {}
-    unsigned int getGroupId() const {
+    unsigned int getGroupId() const 
+    {
         return groupId;
     }
 
@@ -90,22 +82,67 @@ private:
     int studyProgramId;
 };
 
-
+/**
+ * @file ServiceSchedule.h
+ * @brief Заголовочный файл, содержащий класс ServiceSchedule для работы с расписанием.
+ *
+ * Класс использует HTTPClient для отправки запросов к API расписания и обработки полученных данных.
+ */
 class ServiceSchedule 
 {
-    HTTPClient httpClient;
-
 public:
-    explicit ServiceSchedule(HTTPClient client) : httpClient(client) {}
     /**
-     * Получает расписание с сервера и возвращает его в виде строки.
+     * @brief Конструктор ServiceSchedule.
+     * @param client Экземпляр HTTPClient для отправки запросов.
+     */
+    explicit ServiceSchedule(HTTPClient client);
+
+    /**
+     * @brief Получает расписание с сервера и возвращает его в виде строки.
+     * @param groupId Идентификатор группы.
      * @return Строка с расписанием.
      */
-    
     std::string getSchedule(std::string groupId);
+
+    /**
+     * @brief Получает список факультетов.
+     * @return Вектор объектов Faculty.
+     */
     std::vector<Faculty> getFaculties();
+
+    /**
+     * @brief Получает уровни обучения для заданного факультета.
+     * @param facultyAlias Псевдоним факультета.
+     * @return Вектор объектов Level.
+     */
     std::vector<Level> getLevelsForFaculty(const std::string& facultyAlias);
+
+    /**
+     * @brief Получает программы обучения для заданного факультета и уровня обучения.
+     * @param facultyAlias Псевдоним факультета.
+     * @param levelId Идентификатор уровня обучения.
+     * @return Вектор объектов Program.
+     */
     std::vector<Program> getPrograms(const std::string& facultyAlias, int levelId);
+
+    /**
+     * @brief Получает годы обучения для заданной программы.
+     * @param facultyAlias Псевдоним факультета.
+     * @param levelId Идентификатор уровня обучения.
+     * @param programId Идентификатор программы обучения.
+     * @return Вектор объектов Program.
+     */
     std::vector<Program> getProgramYears(const std::string& facultyAlias, int levelId, int programId);
+
+    /**
+     * @brief Получает список групп для заданной программы обучения.
+     * @param programId Идентификатор программы обучения.
+     * @return Вектор объектов Group.
+     */
     std::vector<Group> getGroups(std::string programId);
+
+private:
+    HTTPClient httpClient;
 };
+
+

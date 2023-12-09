@@ -29,9 +29,7 @@ std::vector<Faculty> ServiceSchedule::getFaculties()
     {
         std::string name = facultyJson["Name"].get<std::string>();
         std::string alias = facultyJson["Alias"].get<std::string>();
-        Faculty faculty(alias, name);
-
-        faculties.push_back(faculty);
+        faculties.emplace_back(alias, name);
     }
 
     return faculties;
@@ -42,14 +40,13 @@ std::vector<Level> ServiceSchedule::getLevelsForFaculty(const std::string& facul
     std::vector<Level> levels;
     std::string apiUrl = "https://timetable.spbu.ru/api/v1/study/divisions/" + facultyAlias + "/programs/levels";
     auto levelsJson = nlohmann::json::parse(httpClient.get_request(apiUrl));
-
+    levels.reserve(levelsJson.size());
      for (std::size_t i = 0; i < levelsJson.size(); ++i)
     {
         const auto& levelJson = levelsJson[i];
 
         std::string name = (levelJson["StudyLevelName"].get<std::string>());
-        Level level(i, name);
-        levels.push_back(level);
+        levels.emplace_back(i, name);
     }
     return levels;
 }
@@ -63,14 +60,14 @@ std::vector<Program> ServiceSchedule::getPrograms(const std::string& facultyAlia
 
     if (levelId >= 0 && levelId < levelsJson.size()) 
     {
+
         const auto& levelJson = levelsJson[levelId];
         const auto& programsJson = levelJson["StudyProgramCombinations"];
+        programs.reserve(programsJson.size());
         for (int i = 0; i < programsJson.size(); i++)
         {
             std::string name = programsJson[i]["Name"].get<std::string>();
-            Program program(i, name);
-
-            programs.push_back(program);
+            programs.emplace_back(i, name);
         }
     }
 
@@ -91,6 +88,7 @@ std::vector<Program> ServiceSchedule::getProgramYears(const std::string& faculty
         {
             const auto& programJson = programsJson[programId]; 
             const auto& admissionYears = programJson["AdmissionYears"]; 
+            programs.reserve(admissionYears.size());
             for (const auto& year : admissionYears) 
             {
                 std::string yearName = year["YearName"].get<std::string>();
@@ -102,12 +100,15 @@ std::vector<Program> ServiceSchedule::getProgramYears(const std::string& faculty
     return programs;
 }
 
-std::vector<Group> ServiceSchedule::getGroups(std::string programId){
+std::vector<Group> ServiceSchedule::getGroups(std::string programId)
+{
     std::vector<Group> groups;
     std::string url = "https://timetable.spbu.ru/api/v1/programs/" + programId + "/groups";
     const auto & levelsJson = nlohmann::json::parse(httpClient.get_request(url));
     const auto & groupsJson = levelsJson["Groups"];
-    for (const auto & group : groupsJson) {
+    groups.reserve(groupsJson.size());
+    for (const auto & group : groupsJson) 
+    {
         std::string groupName = group["StudentGroupName"].get<std::string>();
         int groupId = group["StudentGroupId"].get<int>();
         groups.emplace_back(groupId, groupName);
