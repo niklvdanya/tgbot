@@ -16,6 +16,7 @@ add_executable(telegram_bot
     HTTPClient.cpp
     MessageHandlers.cpp
     ServiceSchedule.cpp
+    Education.cpp
 )
 
 target_link_libraries(telegram_bot
