@@ -93,7 +93,7 @@ std::vector<Program> ServiceSchedule::getProgramYears(const std::string& faculty
             {
                 std::string yearName = year["YearName"].get<std::string>();
                 int studyProgramId = year["StudyProgramId"].get<int>(); 
-                programs.emplace_back(yearName, studyProgramId);
+                programs.emplace_back(yearName, std::to_string(studyProgramId));
             }
         }
     }
