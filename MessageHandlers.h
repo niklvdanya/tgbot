@@ -7,6 +7,7 @@
 #pragma once
 #include <tgbot/tgbot.h>
 #include "ServiceSchedule.h"
+#include "Education.h"
 #include <vector>
 /**
  * @class MessageHandlers
@@ -26,7 +27,11 @@ public:
      */
     explicit MessageHandlers(TgBot::Bot& bot)
     : bot(bot), serviceSchedule(httpClient) {}
-
+    /**
+     * Создает кнопку 
+     * @param Education - интерфейс. Сюда может передаваться группа, программа итд.
+    */
+    void createButton(const Education* entity, TgBot::InlineKeyboardMarkup::Ptr& keyboard,const std::string& prefix, const std::string& postfix = "");
     /**
      * Настраивает обработчики событий для бота.
      */
@@ -86,3 +91,4 @@ private:
     
 
 };
+

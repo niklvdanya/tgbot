@@ -27,11 +27,7 @@ void MessageHandlers::handleGroupButton(const TgBot::CallbackQuery::Ptr& query)
     auto facultiesArray = serviceSchedule.getFaculties();
     for (const auto& faculty : facultiesArray)
     {
-    
-        TgBot::InlineKeyboardButton::Ptr facultyBtn(new TgBot::InlineKeyboardButton);
-        facultyBtn->text = faculty.getName();
-        facultyBtn->callbackData = "faculty_" + faculty.getAlias();
-        keyboard->inlineKeyboard.push_back({ facultyBtn });
+        createButton(&faculty, keyboard, "faculty_");
     }
 
     bot.getApi().sendMessage(query->message->chat->id, "Выберите факультет:", false, 0, keyboard);
@@ -46,10 +42,7 @@ void MessageHandlers::handleFacultySelection(const TgBot::CallbackQuery::Ptr& qu
 
     for (const auto& level : levelsArray)
     {
-        TgBot::InlineKeyboardButton::Ptr levelBtn(new TgBot::InlineKeyboardButton);
-        levelBtn->text = level.getStudyLevelName();
-        levelBtn->callbackData = "level_" + std::to_string(level.getId()) + facultyAlias;
-        keyboard->inlineKeyboard.push_back({ levelBtn });
+        createButton(&level, keyboard, "level_", facultyAlias);
     }
 
     bot.getApi().sendMessage(query->message->chat->id, "Выберите уровень образования:", false, 0, keyboard);
@@ -97,10 +90,7 @@ void MessageHandlers::handleProgramSelection(const TgBot::CallbackQuery::Ptr& qu
 
     for (const auto& program : programsWithYears) 
     {
-        TgBot::InlineKeyboardButton::Ptr yearBtn(new TgBot::InlineKeyboardButton);
-        yearBtn->text = program.getYear();
-        yearBtn->callbackData = "programYear_" + std::to_string(program.getStudyProgramId());
-        keyboard->inlineKeyboard.push_back({ yearBtn });
+        createButton(&program, keyboard, "programYear_");
     }
 
     bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
@@ -114,10 +104,7 @@ void MessageHandlers::handleYearSelection(const TgBot::CallbackQuery::Ptr& query
 
     for (const auto& group : groups) 
     {
-        TgBot::InlineKeyboardButton::Ptr yearBtn(new TgBot::InlineKeyboardButton);
-        yearBtn->text = group.getGroupName();
-        yearBtn->callbackData = "group_" + std::to_string(group.getGroupId());
-        keyboard->inlineKeyboard.push_back({ yearBtn });
+        createButton(&group, keyboard, "group_");
     }
 
     bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
@@ -166,6 +153,7 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
         handleTeacherButton(query);
     }
 }
+
 void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message) 
 {
     if (message->text[0] == '/')
@@ -174,8 +162,6 @@ void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message)
     }
     bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
 }
-
-
 
 void MessageHandlers::setupHandlers() 
 {
@@ -193,4 +179,12 @@ void MessageHandlers::setupHandlers()
     {
         onAnyMessage(message);
     });
+}
+
+void MessageHandlers::createButton(const Education* entity, TgBot::InlineKeyboardMarkup::Ptr& keyboard,const std::string& prefix, const std::string& postfix) 
+{
+    TgBot::InlineKeyboardButton::Ptr button(new TgBot::InlineKeyboardButton);
+    button->text = entity->getName();
+    button->callbackData = prefix + entity->getCallbackData() + postfix;
+    keyboard->inlineKeyboard.push_back({ button });
 }
