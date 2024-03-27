@@ -2,125 +2,64 @@
 #include <iostream>
 #include <cctype>
 
-
-void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) 
-{
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    TgBot::InlineKeyboardButton::Ptr groupBtn(new TgBot::InlineKeyboardButton);
-    TgBot::InlineKeyboardButton::Ptr teacherBtn(new TgBot::InlineKeyboardButton);
-    groupBtn->text = "Названию группы";
-    groupBtn->callbackData = "group_btn";
-    teacherBtn->text = "ФИО преподавателя";
-    teacherBtn->callbackData = "teacher_btn";
-    keyboard->inlineKeyboard.push_back({groupBtn});
-    keyboard->inlineKeyboard.push_back({teacherBtn});
-    std::string greeting = "Добро пожаловать, " + message->chat->firstName + "\n";
-    greeting += "Cледуйте указаниям для настройки\n";
-    greeting += "--------------------\n";
-    greeting += "Получить расписание по: \n";
-    bot.getApi().sendMessage(message->chat->id, greeting, false, 0, keyboard);
+void MessageHandlers::onStartCommand(TgBot::Message::Ptr message) {
+    view->sendWelcomeMessage(message->chat);
 }
 
-void MessageHandlers::handleGroupButton(const TgBot::CallbackQuery::Ptr& query)
-{
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    auto facultiesArray = serviceSchedule.getFaculties();
-    for (const auto& faculty : facultiesArray)
-    {
-        createButton(&faculty, keyboard, "faculty_");
-    }
-
-    bot.getApi().sendMessage(query->message->chat->id, "Выберите факультет:", false, 0, keyboard);
-
-
-} 
-void MessageHandlers::handleFacultySelection(const TgBot::CallbackQuery::Ptr& query)
-{
+void MessageHandlers::handleGroupButton(const TgBot::CallbackQuery::Ptr& query) {
+    auto facultiesArray = serviceSchedule->getFaculties();
+    view->sendFacultyOptions(query->message->chat, facultiesArray);
+}
+ 
+void MessageHandlers::handleFacultySelection(const TgBot::CallbackQuery::Ptr& query) {
     std::string facultyAlias = query->data.substr(8); 
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    auto levelsArray = serviceSchedule.getLevelsForFaculty(facultyAlias);
-
-    for (const auto& level : levelsArray)
-    {
-        createButton(&level, keyboard, "level_", facultyAlias);
-    }
-
-    bot.getApi().sendMessage(query->message->chat->id, "Выберите уровень образования:", false, 0, keyboard);
+    auto levelsArray = serviceSchedule->getLevelsForFaculty(facultyAlias);
+    view->sendLevelOptions(query->message->chat, levelsArray, facultyAlias);
 }
-void MessageHandlers::handleLevelSelection(const TgBot::CallbackQuery::Ptr& query)
-{
+
+void MessageHandlers::handleLevelSelection(const TgBot::CallbackQuery::Ptr& query) {
     std::string alias = query->data.substr(7);
     int levelId = std::stoi(std::string(1, query->data[6]));
-    auto programs = serviceSchedule.getPrograms(alias, levelId);
+    auto programs = serviceSchedule->getPrograms(alias, levelId);
 
+    view->sendProgramOptions(query->message->chat, programs, alias, levelId);
+}
 
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-    for (const auto& program : programs)
-    {
-        std::string id = std::to_string(program.getId());
-        TgBot::InlineKeyboardButton::Ptr programBtn(new TgBot::InlineKeyboardButton);
-        programBtn->text = program.getProgramName();
-        programBtn->callbackData = "program_"  + std::to_string(levelId) + id + alias;
-        keyboard->inlineKeyboard.push_back({ programBtn });
-    }
-
-    bot.getApi().sendMessage(query->message->chat->id, "Выберите программу обучения:", false, 0, keyboard);
-} 
-void MessageHandlers::handleProgramSelection(const TgBot::CallbackQuery::Ptr& query)
-{
+void MessageHandlers::handleProgramSelection(const TgBot::CallbackQuery::Ptr& query) {
     int levelId = std::stoi(std::string(1, query->data[8]));
     std::string alias;
     int programId;
 
-    if(isdigit(query->data[10])) 
-    {
-        alias = query->data.substr(11); 
-        std::string numberStr = query->data.substr(9, 2);
-        programId = std::stoi(numberStr); 
-    } 
-    else 
-    {
-        alias = query->data.substr(10); 
-        std::string numberStr = query->data.substr(9, 1);
-        programId = std::stoi(numberStr); 
+    if(isdigit(query->data[10])) {
+        alias = query->data.substr(11);
+        programId = std::stoi(query->data.substr(9, 2));
+    } else {
+        alias = query->data.substr(10);
+        programId = std::stoi(query->data.substr(9, 1));
     }
 
-    auto programsWithYears = serviceSchedule.getProgramYears(alias, levelId, programId);
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-
-    for (const auto& program : programsWithYears) 
-    {
-        createButton(&program, keyboard, "programYear_");
-    }
-
-    bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
+    auto programsWithYears = serviceSchedule->getProgramYears(alias, levelId, programId);
+    view->sendProgramYearsOptions(query->message->chat, programsWithYears, alias, levelId, programId);
 }
-void MessageHandlers::handleYearSelection(const TgBot::CallbackQuery::Ptr& query)
-{
+
+void MessageHandlers::handleYearSelection(const TgBot::CallbackQuery::Ptr& query) {
     std::string studyProgramId = query->data.substr(12);
-
-    auto groups = serviceSchedule.getGroups(studyProgramId);
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-
-    for (const auto& group : groups) 
-    {
-        createButton(&group, keyboard, "group_");
-    }
-
-    bot.getApi().sendMessage(query->message->chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
-
+    auto groups = serviceSchedule->getGroups(studyProgramId);
+    view->sendGroupOptions(query->message->chat, groups);
 }
+
 void MessageHandlers::handleGroupSelection(const TgBot::CallbackQuery::Ptr& query)
 {
     std::string groupId = query->data.substr(6);
-    std::string schedule = serviceSchedule.getSchedule(groupId);
-    bot.getApi().sendMessage(query->message->chat->id, schedule);
-
+    std::string schedule = serviceSchedule->getSchedule(groupId);
+    view->sendScheduleMessage(query->message->chat, schedule);
 }
+
 void MessageHandlers::handleTeacherButton(const TgBot::CallbackQuery::Ptr& query)
-    {
-        bot.getApi().sendMessage(query->message->chat->id, "under development");
-    }
+{
+    std::string info = "under development";
+    view->sendTeacherOptions(query->message->chat, info);
+}
 
 
 void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
@@ -144,6 +83,7 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
     {
         handleYearSelection(query);
     } 
+    
     else if (query->data.find("group_") == 0) 
     {
         handleGroupSelection(query);
@@ -179,12 +119,4 @@ void MessageHandlers::setupHandlers()
     {
         onAnyMessage(message);
     });
-}
-
-void MessageHandlers::createButton(const Education* entity, TgBot::InlineKeyboardMarkup::Ptr& keyboard,const std::string& prefix, const std::string& postfix) 
-{
-    TgBot::InlineKeyboardButton::Ptr button(new TgBot::InlineKeyboardButton);
-    button->text = entity->getName();
-    button->callbackData = prefix + entity->getCallbackData() + postfix;
-    keyboard->inlineKeyboard.push_back({ button });
 }

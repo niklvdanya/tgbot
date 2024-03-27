@@ -6,9 +6,11 @@
 
 #pragma once
 #include <tgbot/tgbot.h>
-#include "ServiceSchedule.h"
+#include "IServiceSchedule.h"
 #include "Education.h"
 #include <vector>
+#include "IbotView.h"
+#include <memory>
 /**
  * @class MessageHandlers
  * @brief Класс для обработки входящих сообщений и команд от пользователя в Telegram боте.
@@ -25,13 +27,8 @@ public:
      * Конструктор класса MessageHandlers.
      * @param bot Ссылка на объект бота, с которым будет работать обработчик.
      */
-    explicit MessageHandlers(TgBot::Bot& bot)
-    : bot(bot), serviceSchedule(httpClient) {}
-    /**
-     * Создает кнопку 
-     * @param Education - интерфейс. Сюда может передаваться группа, программа итд.
-    */
-    void createButton(const Education* entity, TgBot::InlineKeyboardMarkup::Ptr& keyboard,const std::string& prefix, const std::string& postfix = "");
+    explicit MessageHandlers(TgBot::Bot& bot, std::shared_ptr<IBotView> view, std::shared_ptr<IServiceSchedule> iServiceSchedule)
+    : bot(bot), serviceSchedule(iServiceSchedule), view(view) {}
     /**
      * Настраивает обработчики событий для бота.
      */
@@ -66,9 +63,8 @@ public:
     void handleTeacherButton(const TgBot::CallbackQuery::Ptr& query);
 private:
     TgBot::Bot& bot;
-    HTTPClient  httpClient;
-    ServiceSchedule serviceSchedule;
-
+    std::shared_ptr<IServiceSchedule> serviceSchedule;
+    std::shared_ptr<IBotView> view;
     /**
      * Обработчик команды /start.
      * Отправляет приветственное сообщение и кнопки для выбора опций.
