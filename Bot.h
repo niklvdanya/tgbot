@@ -1,12 +1,14 @@
 #pragma once
 #include "MessageHandlers.h"
 #include "BotView.h" 
-#include <memory>    
+#include "View.h"
+#include <memory>  
+#include "createServiceSchedule.h"  
 
 class Bot {
 public:
     explicit Bot(const std::string& token)
-        : bot(token), messageHandlers_(bot, std::static_pointer_cast<IBotView>(std::make_shared<BotView>(bot))) {
+        : bot(token), messageHandlers_(bot, createView(bot), createServiceSchedule(httpClient)) {
         setupHandlers();
     }
 
@@ -14,6 +16,7 @@ public:
     void setupHandlers();
 
 private:
+    HTTPClient httpClient;
     TgBot::Bot bot;
     MessageHandlers messageHandlers_;
 };

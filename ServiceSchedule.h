@@ -1,8 +1,5 @@
 #pragma once
-#include "HTTPClient.h"
-#include <string>
-#include "json.hpp"
-#include "Education.h"
+#include "IServiceSchedule.h"
 
 /**
  * @file ServiceSchedule.h
@@ -10,7 +7,7 @@
  *
  * Класс использует HTTPClient для отправки запросов к API расписания и обработки полученных данных.
  */
-class ServiceSchedule 
+class ServiceSchedule : public IServiceSchedule
 {
 public:
     /**
@@ -24,20 +21,20 @@ public:
      * @param groupId Идентификатор группы.
      * @return Строка с расписанием.
      */
-    std::string getSchedule(std::string groupId);
+    std::string getSchedule(std::string groupId) override;
 
     /**
      * @brief Получает список факультетов.
      * @return Вектор объектов Faculty.
      */
-    std::vector<Faculty> getFaculties();
+    std::vector<Faculty> getFaculties() override;
 
     /**
      * @brief Получает уровни обучения для заданного факультета.
      * @param facultyAlias Псевдоним факультета.
      * @return Вектор объектов Level.
      */
-    std::vector<Level> getLevelsForFaculty(const std::string& facultyAlias);
+    std::vector<Level> getLevelsForFaculty(const std::string& facultyAlias) override;
 
     /**
      * @brief Получает программы обучения для заданного факультета и уровня обучения.
@@ -45,7 +42,7 @@ public:
      * @param levelId Идентификатор уровня обучения.
      * @return Вектор объектов Program.
      */
-    std::vector<Program> getPrograms(const std::string& facultyAlias, int levelId);
+    std::vector<Program> getPrograms(const std::string& facultyAlias, int levelId) override;
 
     /**
      * @brief Получает годы обучения для заданной программы.
@@ -54,14 +51,14 @@ public:
      * @param programId Идентификатор программы обучения.
      * @return Вектор объектов Program.
      */
-    std::vector<Program> getProgramYears(const std::string& facultyAlias, int levelId, int programId);
+    std::vector<Program> getProgramYears(const std::string& facultyAlias, int levelId, int programId) override;
 
     /**
      * @brief Получает список групп для заданной программы обучения.
      * @param programId Идентификатор программы обучения.
      * @return Вектор объектов Group.
      */
-    std::vector<Group> getGroups(std::string programId);
+    std::vector<Group> getGroups(std::string programId) override;
 
 private:
     HTTPClient httpClient;

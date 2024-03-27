@@ -18,6 +18,8 @@ add_executable(telegram_bot
     ServiceSchedule.cpp
     Education.cpp
     BotView.cpp
+    View.cpp
+    createServiceSchedule.cpp
 )
 
 target_link_libraries(telegram_bot
