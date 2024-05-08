@@ -1,4 +1,4 @@
-#include "View.h"
+#include "createView.h"
 #include "BotView.h"
 
 std::shared_ptr<IBotView> createView(TgBot::Bot& bot)

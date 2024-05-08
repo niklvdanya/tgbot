@@ -18,7 +18,9 @@ public:
     void sendProgramYearsOptions(const TgBot::Chat::Ptr& chat, const std::vector<Program>& programsWithYears, const std::string& alias, int levelId, int programId) override;
     void sendGroupOptions(const TgBot::Chat::Ptr& chat, const std::vector<Group>& groups) override;
     void sendScheduleMessage(const TgBot::Chat::Ptr& chat, const std::string& schedule) override;
-    void sendTeacherOptions(const TgBot::Chat::Ptr& chat, const std::string& message) override;
+    void sendTeacherOptions(const TgBot::Chat::Ptr& chat) override;
+    void sendTeacherSearchResults(const TgBot::Chat::Ptr& chat, const std::vector<Teacher>& teachers) override;
+    void sendTeacherSchedule(const TgBot::Chat::Ptr& chat, const Teacher& teacher) override;
 private:
     TgBot::Bot& bot;
 };

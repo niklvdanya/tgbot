@@ -1,6 +1,19 @@
 #include <string>
 #include "ServiceSchedule.h"
 #include <iostream>
+#include <boost/locale.hpp>
+
+std::string convertToUtf8(const std::string& data, const std::string& from_charset) {
+    return boost::locale::conv::to_utf<char>(data, from_charset);
+}
+
+std::string url_encode(CURL* curl, const std::string& str) {
+    char* output = curl_easy_escape(curl, str.c_str(), str.length());
+    std::string encoded(output);
+    curl_free(output);
+    return encoded;
+}
+
 std::string ServiceSchedule::getSchedule(std::string groupId) 
 {
     std::string url = "https://timetable.spbu.ru/api/v1/groups/" + groupId + "/events";
@@ -115,4 +128,67 @@ std::vector<Group> ServiceSchedule::getGroups(std::string programId)
 
     }
     return groups;
+}
+
+std::vector<Teacher> ServiceSchedule::getTeachersByLastName(const std::string& lastName) {
+    std::vector<Teacher> teachers;
+    CURL* curl = curl_easy_init();
+    std::string encodedLastName = url_encode(curl, lastName);
+    std::string url = "https://timetable.spbu.ru/api/v1/educators/search/" + encodedLastName;
+    auto response = nlohmann::json::parse(httpClient.get_request(url));
+    for (const auto& item : response["Educators"]) {
+        auto id = item["Id"].get<int>();
+        auto fullName = item["FullName"].get<std::string>();
+        fullName += '\n';
+        for (const auto& employment : item["Employments"]) {
+            fullName += employment["Position"].get<std::string>() + " - " + employment["Department"].get<std::string>() + "\n";
+        }
+        teachers.emplace_back(id, fullName);
+    }
+    curl_easy_cleanup(curl);
+    return teachers;
+}
+
+std::string formatEventDates(const nlohmann::json& dates) {
+    std::string formattedDates;
+    for (const auto& date : dates) {
+        formattedDates += date.get<std::string>() + ", ";
+    }
+    if (!formattedDates.empty()) {
+        formattedDates.pop_back();  
+        formattedDates.pop_back(); 
+    }
+    return formattedDates;
+}
+
+Teacher ServiceSchedule::getTeacher(const std::string& id) {
+    std::string url = "https://timetable.spbu.ru/api/v1/educators/" + id + "/events";
+    std::string responseStr = httpClient.get_request(url);
+    auto response = nlohmann::json::parse(responseStr);
+
+    int teacherId = std::stoi(id);
+    std::string fullName = response["EducatorLongDisplayText"].get<std::string>();
+    std::vector<std::string> scheduleDays;
+
+    for (const auto& day : response["EducatorEventsDays"]) {
+        std::string dayInfo = day["DayString"].get<std::string>() + ":\n";
+        bool hasEvents = false;
+
+        for (const auto& event : day["DayStudyEvents"]) {
+            hasEvents = true;
+            dayInfo += "  - " + event["Subject"].get<std::string>() + ", "
+                       + event["TimeIntervalString"].get<std::string>() + "\n"
+                       + "    Даты: " + formatEventDates(event["Dates"]) + "\n"
+                       + "    Место: " + event["EventLocations"][0]["DisplayName"].get<std::string>() + "\n"
+                       + "    Группа: " + event["ContingentUnitNames"][0]["Item1"].get<std::string>() + "\n";
+        }
+
+        if (!hasEvents) {
+            dayInfo += "  Нет запланированных занятий.\n";
+        }
+
+        scheduleDays.push_back(dayInfo);
+    }
+
+    return Teacher(teacherId, fullName, scheduleDays);
 }

@@ -50,3 +50,16 @@ std::string Program::getProgramName() const
     return programName;
 }
 
+std::string Teacher::getCallbackData() const 
+{ 
+    return std::to_string(id);
+}
+
+std::string Teacher::getName() const 
+{ 
+    return fullName;
+}
+
+std::vector<std::string> Teacher::getScheduleDays() const {
+    return scheduleDays;
+}

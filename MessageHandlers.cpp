@@ -57,10 +57,17 @@ void MessageHandlers::handleGroupSelection(const TgBot::CallbackQuery::Ptr& quer
 
 void MessageHandlers::handleTeacherButton(const TgBot::CallbackQuery::Ptr& query)
 {
-    std::string info = "under development";
-    view->sendTeacherOptions(query->message->chat, info);
+    userStates[query->message->chat->id].state = UserState::AWAITING_TEACHER_NAME;
+    view->sendTeacherOptions(query->message->chat);
 }
 
+void MessageHandlers::handleTeacherSelection(const TgBot::CallbackQuery::Ptr& query)
+{
+    std::string id = query->data.substr(8);
+    auto teacher = serviceSchedule->getTeacher(id);
+    view->sendTeacherSchedule(query->message->chat, teacher);
+    
+}
 
 void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
     if (query->data == "group_btn") 
@@ -92,15 +99,28 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
     {
         handleTeacherButton(query);
     }
+    else if (query->data.find("teacher_") == 0)
+    {
+        handleTeacherSelection(query);
+    }
 }
 
 void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message) 
 {
-    if (message->text[0] == '/')
+    auto& userData = userStates[message->chat->id];
+    if (userData.state == UserState::AWAITING_TEACHER_NAME) 
     {
-        return;
+        auto teachers = serviceSchedule->getTeachersByLastName(message->text);
+        if (teachers.empty()) {
+            std::string response = "Преподаватель с такой фамилией не найден. Пожалуйста, введите фамилию еще раз:";
+            bot.getApi().sendMessage(message->chat->id, response);
+        } else {
+        userData.lastInput = message->text;
+        userData.state = UserState::DEFAULT;
+
+        view->sendTeacherSearchResults(message->chat, teachers);
+        }
     }
-    bot.getApi().sendMessage(message->chat->id, "Your message is: " + message->text);
 }
 
 void MessageHandlers::setupHandlers() 

@@ -60,6 +60,10 @@ public:
      */
     std::vector<Group> getGroups(std::string programId) override;
 
+    std::vector<Teacher> getTeachersByLastName(const std::string& lastName) override;
+
+    Teacher getTeacher(const std::string& id) override;
+
 private:
     HTTPClient httpClient;
 };

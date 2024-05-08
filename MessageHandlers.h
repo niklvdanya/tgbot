@@ -11,6 +11,7 @@
 #include <vector>
 #include "IbotView.h"
 #include <memory>
+#include "UserState.h"
 /**
  * @class MessageHandlers
  * @brief Класс для обработки входящих сообщений и команд от пользователя в Telegram боте.
@@ -61,7 +62,10 @@ public:
      * Обрабатывает выбор пользователем кнопки "По ФИО преподавателя"
     */
     void handleTeacherButton(const TgBot::CallbackQuery::Ptr& query);
+
+    void handleTeacherSelection(const TgBot::CallbackQuery::Ptr& query);
 private:
+    std::map<int64_t, UserData> userStates;
     TgBot::Bot& bot;
     std::shared_ptr<IServiceSchedule> serviceSchedule;
     std::shared_ptr<IBotView> view;
@@ -85,6 +89,5 @@ private:
      */
     void onAnyMessage(TgBot::Message::Ptr message);
     
-
 };
 

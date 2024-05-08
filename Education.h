@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 /**
  * Вспомогательные классы, Education - интерфейс
 */
@@ -69,4 +70,21 @@ private:
     std::string programName;
     std::string year;
     std::string studyProgramId;
+};
+
+
+class Teacher : public Education
+{
+public:
+
+    std::string getCallbackData() const;
+    std::string getName() const;
+    std::vector<std::string> getScheduleDays() const;
+    Teacher(int id, const std::string& fullName, const std::vector<std::string> scheduleDays = std::vector<std::string>())
+        : id(id), fullName(fullName), scheduleDays(scheduleDays) {}
+
+private:
+    int id;                    
+    std::string fullName;      
+    std::vector<std::string> scheduleDays;
 };
