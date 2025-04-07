@@ -1,10 +1,38 @@
 #include <string>
 #include "ServiceSchedule.h"
 #include <iostream>
-#include <boost/locale.hpp>
+#include <iconv.h>
+#include <cerrno>
+#include <stdexcept>
+#include <cstring>
+
+std::string convertEncoding(const std::string& input, 
+    const std::string& from_charset, 
+    const std::string& to_charset = "UTF-8") {
+    iconv_t converter = iconv_open(to_charset.c_str(), from_charset.c_str());
+    if (converter == (iconv_t)-1) {
+    throw std::runtime_error("Failed to open iconv converter");
+    }
+
+    size_t in_bytes_left = input.size();
+    char* in_buf = const_cast<char*>(input.data());
+
+    size_t out_bytes_left = input.size() * 4;
+    std::string output(out_bytes_left, '\0');
+    char* out_buf = &output[0];
+
+    if (iconv(converter, &in_buf, &in_bytes_left, &out_buf, &out_bytes_left) == (size_t)-1) {
+    iconv_close(converter);
+    throw std::runtime_error(std::string("Conversion failed: ") + strerror(errno));
+    }
+
+    iconv_close(converter);
+    output.resize(output.size() - out_bytes_left);
+    return output;
+}
 
 std::string convertToUtf8(const std::string& data, const std::string& from_charset) {
-    return boost::locale::conv::to_utf<char>(data, from_charset);
+    return convertEncoding(data, from_charset, "UTF-8");
 }
 
 std::string url_encode(CURL* curl, const std::string& str) {

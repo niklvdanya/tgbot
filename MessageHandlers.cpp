@@ -70,39 +70,65 @@ void MessageHandlers::handleTeacherSelection(const TgBot::CallbackQuery::Ptr& qu
 }
 
 void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
-    if (query->data == "group_btn") 
-    {
-        handleGroupButton(query);
-    } 
-    else if (query->data.find("faculty_") == 0) 
-    {
-        handleFacultySelection(query);
-    } 
-    else if (query->data.find("level_") == 0)
-    {
-        handleLevelSelection(query);
-    } 
-    else if (query->data.find("program_") == 0) 
-    {
-        handleProgramSelection(query);
-    } 
-    else if (query->data.find("programYear_") == 0) 
-    {
-        handleYearSelection(query);
-    } 
-    
-    else if (query->data.find("group_") == 0) 
-    {
-        handleGroupSelection(query);
-    } 
-    else if (query->data == "teacher_btn") 
-    {
-        handleTeacherButton(query);
+    if (!query || query->data.empty()) {
+        std::cerr << "Empty query received" << std::endl;
+        return;
     }
-    else if (query->data.find("teacher_") == 0)
-    {
-        handleTeacherSelection(query);
+
+    try {
+        // Отправляем мгновенный ответ
+        bot.getApi().answerCallbackQuery(query->id, "Processing...");
+
+        if (query->data == "group_btn") {
+            handleGroupButton(query);
+        }
+        else if (query->data.find("faculty_") == 0) {
+            processInBackground([this, query]() {
+                handleFacultySelection(query);
+            });
+        }
+        else if (query->data.find("level_") == 0) {
+            processInBackground([this, query]() {
+                handleLevelSelection(query);
+            });
+        }
+        else if (query->data.find("program_") == 0) {
+            processInBackground([this, query]() {
+                handleProgramSelection(query);
+            });
+        }
+        else if (query->data.find("programYear_") == 0) {
+            processInBackground([this, query]() {
+                handleYearSelection(query);
+            });
+        }
+        else if (query->data.find("group_") == 0) {
+            handleGroupSelection(query);
+        }
+        else if (query->data == "teacher_btn") {
+            handleTeacherButton(query);
+        }
+        else if (query->data.find("teacher_") == 0) {
+            handleTeacherSelection(query);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error processing callback: " << e.what() << std::endl;
+        try {
+            bot.getApi().sendMessage(query->message->chat->id, "Error processing your request");
+        } catch (...) {
+            std::cerr << "Failed to send error message" << std::endl;
+        }
     }
+}
+
+void MessageHandlers::processInBackground(std::function<void()> task) {
+    std::thread([task]() {
+        try {
+            task();
+        } catch (const std::exception& e) {
+            std::cerr << "Background task error: " << e.what() << std::endl;
+        }
+    }).detach();
 }
 
 void MessageHandlers::onAnyMessage(TgBot::Message::Ptr message) 

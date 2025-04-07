@@ -80,7 +80,7 @@ void BotView::sendProgramYearsOptions(const TgBot::Chat::Ptr& chat,
     for (const auto& program : programsWithYears) {
         TgBot::InlineKeyboardButton::Ptr programYearBtn(new TgBot::InlineKeyboardButton);
         programYearBtn->text = program.getProgramName() + ": " + program.getName(); 
-        programYearBtn->callbackData = "programYear_" + std::to_string(program.getId()); 
+        programYearBtn->callbackData = "programYear_" + program.getCallbackData(); 
         keyboard->inlineKeyboard.push_back({ programYearBtn });
     }
 

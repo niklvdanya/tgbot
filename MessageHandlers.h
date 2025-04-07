@@ -88,6 +88,8 @@ private:
      * @param message Указатель на объект сообщения.
      */
     void onAnyMessage(TgBot::Message::Ptr message);
+
+    void processInBackground(std::function<void()> task);
     
 };
 
