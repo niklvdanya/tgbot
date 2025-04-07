@@ -6,12 +6,12 @@
 
 #pragma once
 #include <tgbot/tgbot.h>
-#include "IServiceSchedule.h"
-#include "Education.h"
+#include "services/IServiceSchedule.h"
+#include "models/Education.h"
 #include <vector>
-#include "IbotView.h"
+#include "views/IbotView.h"
 #include <memory>
-#include "UserState.h"
+#include "models/UserState.h"
 /**
  * @class MessageHandlers
  * @brief Класс для обработки входящих сообщений и команд от пользователя в Telegram боте.

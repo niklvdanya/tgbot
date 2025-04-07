@@ -1,9 +1,9 @@
 #pragma once
-#include "MessageHandlers.h"
-#include "BotView.h" 
-#include "createView.h"
+#include "controllers/MessageHandlers.h"
+#include "views/BotView.h" 
+#include "views/factory/createView.h"
 #include <memory>  
-#include "createServiceSchedule.h"  
+#include "views/factory/createServiceSchedule.h"  
 
 class Bot {
 public:

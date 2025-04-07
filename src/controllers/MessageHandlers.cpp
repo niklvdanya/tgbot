@@ -40,6 +40,7 @@ void MessageHandlers::handleProgramSelection(const TgBot::CallbackQuery::Ptr& qu
 
     auto programsWithYears = serviceSchedule->getProgramYears(alias, levelId, programId);
     view->sendProgramYearsOptions(query->message->chat, programsWithYears, alias, levelId, programId);
+
 }
 
 void MessageHandlers::handleYearSelection(const TgBot::CallbackQuery::Ptr& query) {
@@ -76,7 +77,6 @@ void MessageHandlers::onCallbackQuery(TgBot::CallbackQuery::Ptr query) {
     }
 
     try {
-        // Отправляем мгновенный ответ
         bot.getApi().answerCallbackQuery(query->id, "Processing...");
 
         if (query->data == "group_btn") {

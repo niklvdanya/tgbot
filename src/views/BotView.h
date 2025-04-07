@@ -3,7 +3,7 @@
 #include <tgbot/tgbot.h>
 #include <vector>
 #include <string>
-#include "Education.h" 
+#include "models/Education.h" 
 #include "IbotView.h"
 
 class BotView : public IBotView{

@@ -1,5 +1,5 @@
 #include "createView.h"
-#include "BotView.h"
+#include "views/BotView.h"
 
 std::shared_ptr<IBotView> createView(TgBot::Bot& bot)
 {
