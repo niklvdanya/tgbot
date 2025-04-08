@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libboost-system-dev \
     zlib1g-dev \
+    libgtest-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/nlohmann/json.git && \
@@ -24,6 +25,12 @@ RUN git clone https://github.com/reo7sp/tgbot-cpp.git && \
     make install && \
     cd .. && \
     rm -rf tgbot-cpp
+
+RUN cd /usr/src/gtest && \
+    cmake . && \
+    make && \
+    cp lib/*.a /usr/lib && \
+    ln -s /usr/src/gtest/include/gtest /usr/include/gtest
 
 COPY . .
 

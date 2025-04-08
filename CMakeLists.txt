@@ -68,3 +68,44 @@ set_target_properties(telegram_bot PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 )
+
+enable_testing()
+
+set(TEST_SOURCES
+    tests/test_config.cpp
+    tests/test_httpclient.cpp
+    tests/test_serviceschedule.cpp
+)
+
+add_executable(run_tests ${TEST_SOURCES} 
+    src/config/Config.cpp
+    src/services/HTTPClient.cpp
+    src/services/ServiceSchedule.cpp
+    src/models/Education.cpp
+)
+
+target_include_directories(run_tests PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${Boost_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR}
+    ${CURL_INCLUDE_DIRS}
+    /usr/local/include
+    /usr/include/gtest
+)
+
+target_link_libraries(run_tests PRIVATE
+    gtest
+    gtest_main
+    pthread
+    Boost::system
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    Threads::Threads
+    ${CURL_LIBRARIES}
+)
+
+set_target_properties(run_tests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+add_test(NAME UnitTests COMMAND run_tests)
