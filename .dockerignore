@@ -1,0 +1,11 @@
+.git
+.idea
+.vscode
+build/
+*.user
+*.o
+*.a
+*.so
+telegram_bot
+*.log
+.env

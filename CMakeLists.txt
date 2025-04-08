@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10) 
+cmake_minimum_required(VERSION 3.10)
 project(TelegramBot VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -19,7 +19,7 @@ set(SOURCES
     src/views/BotView.cpp
     src/views/factory/createView.cpp
     src/views/factory/createServiceSchedule.cpp
-    src/config/Config.cpp    
+    src/config/Config.cpp
 )
 
 set(HEADERS
@@ -35,8 +35,8 @@ set(HEADERS
 )
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/src  
-    /usr/local/include       
+    ${CMAKE_SOURCE_DIR}/src
+    /usr/local/include
 )
 
 find_package(Boost 1.71 REQUIRED COMPONENTS system)
@@ -56,7 +56,7 @@ target_link_libraries(telegram_bot PRIVATE
 )
 
 target_include_directories(telegram_bot PRIVATE
-    ${CMAKE_SOURCE_DIR}/src  
+    ${CMAKE_SOURCE_DIR}/src
     ${Boost_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${CURL_INCLUDE_DIRS}

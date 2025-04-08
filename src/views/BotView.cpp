@@ -19,7 +19,7 @@ void BotView::sendWelcomeMessage(const TgBot::Chat::Ptr& chat)
     greeting += "--------------------\n";
     greeting += "Получить расписание по: \n";
     
-    bot.getApi().sendMessage(chat->id, greeting, false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, greeting, nullptr, nullptr, keyboard);
 }
 
 void BotView::sendFacultyOptions(const TgBot::Chat::Ptr& chat, const std::vector<Faculty>& faculties)
@@ -31,7 +31,7 @@ void BotView::sendFacultyOptions(const TgBot::Chat::Ptr& chat, const std::vector
         createButton(&faculty, keyboard, "faculty_");
     }
 
-    bot.getApi().sendMessage(chat->id, "Выберите факультет:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите факультет:", nullptr, nullptr, keyboard);
 }
 
 void BotView::createButton(const Education* entity, TgBot::InlineKeyboardMarkup::Ptr& keyboard,
@@ -52,7 +52,7 @@ void BotView::sendLevelOptions(const TgBot::Chat::Ptr& chat, const std::vector<L
         createButton(&level, keyboard, "level_", facultyAlias);
     }
 
-    bot.getApi().sendMessage(chat->id, "Выберите уровень образования:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите уровень образования:", nullptr, nullptr, keyboard);
 
 }
 
@@ -68,7 +68,7 @@ void BotView::sendProgramOptions(const TgBot::Chat::Ptr& chat, const std::vector
         keyboard->inlineKeyboard.push_back({ programBtn });
     }
 
-    bot.getApi().sendMessage(chat->id, "Выберите программу обучения:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите программу обучения:", nullptr, nullptr, keyboard);
 }
 
 void BotView::sendProgramYearsOptions(const TgBot::Chat::Ptr& chat, 
@@ -84,7 +84,7 @@ void BotView::sendProgramYearsOptions(const TgBot::Chat::Ptr& chat,
         keyboard->inlineKeyboard.push_back({ programYearBtn });
     }
 
-    bot.getApi().sendMessage(chat->id, "Выберите год поступления для программы:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите год поступления для программы:", nullptr, nullptr, keyboard);
 }
 
 void BotView::sendGroupOptions(const TgBot::Chat::Ptr& chat, const std::vector<Group>& groups) {
@@ -97,7 +97,7 @@ void BotView::sendGroupOptions(const TgBot::Chat::Ptr& chat, const std::vector<G
         keyboard->inlineKeyboard.push_back({groupBtn});
     }
 
-    bot.getApi().sendMessage(chat->id, "Выберите группу:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите группу:", nullptr, nullptr, keyboard);
 }
 
 void BotView::sendScheduleMessage(const TgBot::Chat::Ptr& chat, const std::string& schedule) {
@@ -118,7 +118,7 @@ void BotView::sendTeacherSearchResults(const TgBot::Chat::Ptr& chat, const std::
         std::vector<TgBot::InlineKeyboardButton::Ptr> row {button};
         keyboard->inlineKeyboard.push_back(row);
     }
-    bot.getApi().sendMessage(chat->id, "Выберите преподавателя:", false, 0, keyboard);
+    bot.getApi().sendMessage(chat->id, "Выберите преподавателя:", nullptr, nullptr, keyboard);
 }
 
 void BotView::sendTeacherSchedule(const TgBot::Chat::Ptr& chat, const Teacher& teacher) {

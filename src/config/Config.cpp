@@ -1,33 +1,14 @@
 #include "Config.h"
-#include <fstream>
-#include <sstream>
+#include <cstdlib>
 
 std::string Config::bot_token_;
 
-void Config::Load(const std::string& path) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open config file: " + path);
+void Config::Load() {
+    const char* token = std::getenv("BOT_TOKEN");
+    if (token == nullptr || std::string(token).empty()) {
+        throw std::runtime_error("BOT_TOKEN environment variable is not set or empty");
     }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        ParseLine(line);
-    }
-}
-
-void Config::ParseLine(const std::string& line) {
-    if (line.empty() || line[0] == '#') return;
-
-    size_t delimiter_pos = line.find('=');
-    if (delimiter_pos == std::string::npos) return;
-
-    std::string key = line.substr(0, delimiter_pos);
-    std::string value = line.substr(delimiter_pos + 1);
-
-    if (key == "BOT_TOKEN") {
-        bot_token_ = value;
-    }
+    bot_token_ = token;
 }
 
 std::string Config::GetToken() {
